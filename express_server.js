@@ -34,6 +34,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+app.post("/urls/:shortURL/delete", (req, res) => {
+  let shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -67,6 +73,8 @@ app.get("/u/:shortURL", (req, res) => {
 
   res.redirect(longUrl);
 });
+
+
 
 
 app.listen(PORT, () => {
