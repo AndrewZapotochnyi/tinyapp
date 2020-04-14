@@ -40,6 +40,14 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+app.post("/urls/:shortURL", (req, res) => {
+  let shortURL = req.params.shortURL;
+  let longURL = req.body.longURL
+  console.log(shortURL, longURL);
+  urlDatabase[shortURL] = longURL;
+  res.redirect("/urls");
+});
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
