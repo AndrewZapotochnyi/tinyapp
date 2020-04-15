@@ -104,6 +104,14 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+// POST to login
+app.get("/login", (req, res) => {
+  let user = users[req.cookies["user_id"]];
+  let templateVars = {'user_id': req.cookies["user_id"], 'user' : user};
+  res.render("login", templateVars);
+
+});
+
 app.post("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = req.body.longURL
