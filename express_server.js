@@ -40,6 +40,25 @@ function emailChecker(currentEmail, usersObject) {
   }
   return false;
 }
+// Password match checker
+function passChecker(currentEmail, password, usersObject) {
+  for (let key in usersObject) {
+    if (usersObject[key].email === currentEmail && usersObject[key].password === password) {
+      return true;
+    };
+  }
+  return false;
+}
+
+// Get id by email
+function getIdByEmail(currentEmail, usersObject) {
+  for (let key in usersObject) {
+    if (usersObject[key].email === currentEmail) {
+      return key;
+    };
+  }
+  return false;
+}
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -73,7 +92,7 @@ app.post("/register", (req, res) => {
   let password = req.body["password"];
   let id = generateRandomString();
   
-  
+  // Check, whether we already have such user and if email/password are not blank
   if (email === "" || password === "") {
     res.status(400).end()
   }  else if (emailChecker(email, users) ){
@@ -89,18 +108,31 @@ app.post("/register", (req, res) => {
 
 // POST to login
 app.post("/login", (req, res) => {
-  //console.log(req.body);
-  let username = req.body["username"];
-  console.log('name', username);
-  res.cookie('username', username);
+  let email = req.body["email"];
+  let password = req.body["password"];
+
+  if (email === "" || password === "") {
+    res.status(403).end()
+  }  else if (emailChecker(email, users) ){
+      if (passChecker(email, password, users)) {
+        console.log("Pass and email match")
+        let id = getIdByEmail(email, users);
+        res.cookie('user_id', id); // Find user id using email
+      } else {
+        res.status(403).end()
+      }
+  } else {
+    res.status(403).end()
+  }
+
   res.redirect("/urls");
 });
 
 // POST to logout
 app.post("/logout", (req, res) => {
   //console.log(req.body);
-  let username = req.cookies["username"];
-  res.clearCookie('username', username);
+  let user = users[req.cookies["user_id"]];
+  res.clearCookie('user_id', user);
   res.redirect("/urls");
 });
 
