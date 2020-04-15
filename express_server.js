@@ -8,6 +8,20 @@ app.use(cookieParser())
 
 app.set("view engine", "ejs");
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
+// Generates random ID
 function generateRandomString() {
   var result = '';
   var characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -16,7 +30,16 @@ function generateRandomString() {
   }
   return result;
 }
-//console.log(generateRandomString());
+
+// Checks whether the email is already in database
+function emailChecker(currentEmail, usersObject) {
+  for (let key in usersObject) {
+    if (usersObject[key].email === currentEmail) {
+      return true;
+    };
+  }
+  return false;
+}
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -28,12 +51,8 @@ const urlDatabase = {
 
 // POST to see the full list of links
 app.post("/urls", (req, res) => {
-  //console.log(req.body);  // Log the POST request body to the console
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   let shortURL = generateRandomString();
-  //console.log(shortURL);
   let longURL = req.body;
-  //console.log(longURL["longURL"]);
   urlDatabase[shortURL] = longURL["longURL"];
   console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
@@ -43,6 +62,28 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   let shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
+// POST to register
+app.post("/register", (req, res) => {
+  
+  // Adding user info to database
+  let email = req.body["email"];
+  let password = req.body["password"];
+  let id = generateRandomString();
+  
+  
+  if (email === "" || password === "") {
+    res.status(400).end()
+  }  else if (emailChecker(email, users) ){
+    res.status(400).end()
+  } else {
+    users[id] = {email, password, id}
+  }
+
+  // Creating cookie with user id
+  res.cookie('user_id', id);
   res.redirect("/urls");
 });
 
@@ -80,24 +121,31 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  let templateVars = {'username': req.cookies["username"]};
+  let user = users[req.cookies["user_id"]];
+  let templateVars = {'user_id': req.cookies["user_id"], 'user' : user};
   res.render("urls_new", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  let templateVars = {'username': req.cookies["username"]};
+  let user = users[req.cookies["user_id"]];
+  let templateVars = {'user_id': req.cookies["user_id"], 'user' : user};
   res.render("reg", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {'username': req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase };
+  let user = users[req.cookies["user_id"]];
+  let templateVars = {'user_id': req.cookies["user_id"], shortURL: req.params.shortURL, longURL: urlDatabase, 'user' : user };
   res.render("urls_show", templateVars);
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = {'username': req.cookies["username"], urls: urlDatabase };
+  let user = users[req.cookies["user_id"]];
+  //let currentEmail = currentUser.email;
+  
+  let templateVars = {'user_id': req.cookies["user_id"], urls: urlDatabase, 'user' : user };
+  
   res.render("urls_index", templateVars);
-  // console.log(req.cookies["username"]);
+  
 });
 
 app.get("/hello", (req, res) => {
@@ -105,8 +153,10 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  let templateVars = {'username': req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase };
+  let user = users[req.cookies["user_id"]];
+  let templateVars = {'user_id': req.cookies["user_id"], shortURL: req.params.shortURL, longURL: urlDatabase, 'user' : user  };
   let shortUrl = templateVars["shortURL"];
+  
   let longUrl = urlDatabase[shortUrl];
 
   res.redirect(longUrl);
