@@ -28,8 +28,8 @@ const urlDatabase = {
   "9sm500": { longURL: "http://yandex.ru", userID: "user2RandomID"}
 };
 
-console.log(urlDatabase["b2xVn2"].longURL);
-console.log(urlDatabase["b2xVn2"].userID);
+//console.log(urlDatabase["b2xVn2"].longURL);
+//console.log(urlDatabase["b2xVn2"].userID);
 
 // Filters out links database by UserID
 function urlsForUser(id, linksObject) {
@@ -104,7 +104,11 @@ app.post("/urls", (req, res) => {
 // POST to delete the link
 app.post("/urls/:shortURL/delete", (req, res) => {
   let shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
+  
+  if (req.cookies["user_id"] === urlDatabase[shortURL].userID) {
+    delete urlDatabase[shortURL];
+  }
+
   res.redirect("/urls");
 });
 
@@ -122,11 +126,12 @@ app.post("/register", (req, res) => {
   }  else if (emailChecker(email, users) ){
     res.status(400).end()
   } else {
-    users[id] = {email, password, id}
+    users[id] = {email, password, id};
+    res.cookie('user_id', id);
   }
 
   // Creating cookie with user id
-  res.cookie('user_id', id);
+  
   res.redirect("/urls");
 });
 
@@ -172,8 +177,12 @@ app.post("/urls/:shortURL", (req, res) => {
   let shortURL = req.params.shortURL;
   let longURL = req.body.longURL
   let user = users[req.cookies["user_id"]];
-  console.log(shortURL, longURL);
-  urlDatabase[shortURL] = { longURL: longURL, userID: user.id };
+
+  if (req.cookies["user_id"] === urlDatabase[shortURL].userID) {
+    //console.log(shortURL, longURL);
+    urlDatabase[shortURL] = { longURL: longURL, userID: user.id };
+  }
+
   res.redirect("/urls");
 });
 
