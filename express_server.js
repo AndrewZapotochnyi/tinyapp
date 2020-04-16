@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 var cookieParser = require('cookie-parser')
+const bcrypt = require('bcrypt');
 
 app.use(cookieParser())
 
@@ -16,8 +17,13 @@ const users = {
   },
  "user2RandomID": {
     id: "user2RandomID", 
-    email: "user2@example.com", 
+    email: "a2@example.com", 
     password: "dishwasher-funk"
+  },
+  "userAZ": {
+    id: "userAZ", 
+    email: "info@azblockchain.co", 
+    password: "123"
   }
 }
 
@@ -65,8 +71,10 @@ function emailChecker(currentEmail, usersObject) {
 }
 // Password match checker
 function passChecker(currentEmail, password, usersObject) {
+
+  // Compare hashes
   for (let key in usersObject) {
-    if (usersObject[key].email === currentEmail && usersObject[key].password === password) {
+    if (usersObject[key].email === currentEmail && bcrypt.compareSync(password, usersObject[key].password)) {
       return true;
     };
   }
@@ -119,6 +127,8 @@ app.post("/register", (req, res) => {
   let email = req.body["email"];
   let password = req.body["password"];
   let id = generateRandomString();
+
+  const hashedPassword = bcrypt.hashSync(password, 10);
   
   // Check, whether we already have such user and if email/password are not blank
   if (email === "" || password === "") {
@@ -126,9 +136,11 @@ app.post("/register", (req, res) => {
   }  else if (emailChecker(email, users) ){
     res.status(400).end()
   } else {
-    users[id] = {email, password, id};
+    users[id] = {email, password: hashedPassword, id};
     res.cookie('user_id', id);
+    console.log(users);
   }
+
 
   // Creating cookie with user id
   
@@ -144,14 +156,16 @@ app.post("/login", (req, res) => {
     res.status(403).end()
   }  else if (emailChecker(email, users) ){
       if (passChecker(email, password, users)) {
-        console.log("Pass and email match")
+        console.log("Pass and email match");
         let id = getIdByEmail(email, users);
         res.cookie('user_id', id); // Find user id using email
       } else {
         res.status(403).end()
+        return;
       }
   } else {
     res.status(403).end()
+    return;
   }
 
   res.redirect("/urls");
@@ -233,6 +247,7 @@ app.get("/urls", (req, res) => {
 
   if (!user) {
     res.redirect("/login");
+    return;
   }
   
   let filteredDatabase = urlsForUser(user.id, urlDatabase);
