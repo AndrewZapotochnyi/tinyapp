@@ -23,11 +23,26 @@ const users = {
 
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"},
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID"}
+  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID"},
+  "9sm5x4": { longURL: "http://azblockchain.co/", userID: "user2RandomID"},
+  "9sm500": { longURL: "http://yandex.ru", userID: "user2RandomID"}
 };
 
 console.log(urlDatabase["b2xVn2"].longURL);
 console.log(urlDatabase["b2xVn2"].userID);
+
+// Filters out links database by UserID
+function urlsForUser(id, linksObject) {
+  let userUrlDatabase = {};
+  for (let key in linksObject) {
+    if (linksObject[key].userID === id) {
+      userUrlDatabase[key] = linksObject[key];
+    } 
+  }
+  return userUrlDatabase;
+}
+
+//console.log(urlsForUser("userRandomID", urlDatabase));
 
 // Generates random ID
 function generateRandomString() {
@@ -78,6 +93,8 @@ app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body;
   let user = users[req.cookies["user_id"]];
+
+  //urlsForUser(id, linksObject)
 
   urlDatabase[shortURL] = { longURL: longURL["longURL"], userID: user.id };
   console.log(urlDatabase);
@@ -187,15 +204,30 @@ app.get("/register", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   let user = users[req.cookies["user_id"]];
-  let templateVars = {'user_id': req.cookies["user_id"], shortURL: req.params.shortURL, longURL: urlDatabase, 'user' : user };
-  res.render("urls_show", templateVars);
+
+  let filteredDatabase = urlsForUser(user.id, urlDatabase);
+
+  if (filteredDatabase[req.params.shortURL]) {
+    let templateVars = {'user_id': req.cookies["user_id"], shortURL: req.params.shortURL, longURL: filteredDatabase, 'user' : user };
+    res.render("urls_show", templateVars);
+  } else {
+    let templateVars = {'user_id': req.cookies["user_id"], 'user' : user}
+    res.render("url_not_avail", templateVars);
+  }
+
+  
 });
 
 app.get("/urls", (req, res) => {
   let user = users[req.cookies["user_id"]];
   //let currentEmail = currentUser.email;
+
+  if (!user) {
+    res.redirect("/login");
+  }
   
-  let templateVars = {'user_id': req.cookies["user_id"], urls: urlDatabase, 'user' : user };
+  let filteredDatabase = urlsForUser(user.id, urlDatabase);
+  let templateVars = {'user_id': req.cookies["user_id"], urls: filteredDatabase, 'user' : user };
   
   res.render("urls_index", templateVars);
   
