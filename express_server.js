@@ -1,21 +1,27 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-
-//var cookieParser = require('cookie-parser')
 const bcrypt = require('bcrypt');
 var cookieSession = require('cookie-session')
 
+// Helper functions exports
+const helperFunctions = require("./helpers");
+const getUserByEmail = helperFunctions.getUserByEmail;
+const urlsForUser = helperFunctions.urlsForUser;
+const generateRandomString = helperFunctions.generateRandomString;
+const emailChecker = helperFunctions.emailChecker;
+const passChecker = helperFunctions.passChecker;
+const getIdByEmail = helperFunctions.getIdByEmail;
+
+// Launching cookie sessions
 app.use(cookieSession({
   name: 'session',
   keys: ["user_id"],
-
-  // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 
-//app.use(cookieParser())
-
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 const users = { 
@@ -42,67 +48,6 @@ const urlDatabase = {
   "9sm5x4": { longURL: "http://azblockchain.co/", userID: "user2RandomID"},
   "9sm500": { longURL: "http://yandex.ru", userID: "user2RandomID"}
 };
-
-//console.log(urlDatabase["b2xVn2"].longURL);
-//console.log(urlDatabase["b2xVn2"].userID);
-
-// Filters out links database by UserID
-function urlsForUser(id, linksObject) {
-  let userUrlDatabase = {};
-  for (let key in linksObject) {
-    if (linksObject[key].userID === id) {
-      userUrlDatabase[key] = linksObject[key];
-    } 
-  }
-  return userUrlDatabase;
-}
-
-//console.log(urlsForUser("userRandomID", urlDatabase));
-
-// Generates random ID
-function generateRandomString() {
-  var result = '';
-  var characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  for ( var i = 0; i < 6; i++ ) {
-     result += characters.charAt(Math.floor(Math.random() * 6));
-  }
-  return result;
-}
-
-// Checks whether the email is already in database
-function emailChecker(currentEmail, usersObject) {
-  for (let key in usersObject) {
-    if (usersObject[key].email === currentEmail) {
-      return true;
-    };
-  }
-  return false;
-}
-// Password match checker
-function passChecker(currentEmail, password, usersObject) {
-
-  // Compare hashes
-  for (let key in usersObject) {
-    if (usersObject[key].email === currentEmail && bcrypt.compareSync(password, usersObject[key].password)) {
-      return true;
-    };
-  }
-  return false;
-}
-
-// Get id by email
-function getIdByEmail(currentEmail, usersObject) {
-  for (let key in usersObject) {
-    if (usersObject[key].email === currentEmail) {
-      return key;
-    };
-  }
-  return false;
-}
-
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
-
 
 
 // POST to see the full list of links
@@ -151,9 +96,7 @@ app.post("/register", (req, res) => {
     console.log(users);
   }
 
-
   // Creating cookie with user id
-  
   res.redirect("/urls");
 });
 
@@ -167,9 +110,8 @@ app.post("/login", (req, res) => {
   }  else if (emailChecker(email, users) ){
       if (passChecker(email, password, users)) {
         console.log("Pass and email match");
-        let id = getIdByEmail(email, users);
-        //res.cookie('user_id', id); // Find user id using email
-        req.session.user_id = id;
+        let user = getUserByEmail(email, users);
+        req.session.user_id = user.id;
       } else {
         res.status(403).end()
         return;
