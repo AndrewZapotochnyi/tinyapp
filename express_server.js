@@ -89,7 +89,7 @@ app.post("/register", (req, res) => {
     res.render("reg_empty");
     res.status(400).end()
   }  else if (emailChecker(email, users) ){
-    
+    res.render("reg_exists");
     res.status(400).end()
   } else {
     users[id] = {email, password: hashedPassword, id};
@@ -141,8 +141,6 @@ app.post("/logout", (req, res) => {
 
 // Get login
 app.get("/login", (req, res) => {
-  
-
 
   let user = users[req.session.user_id];
   let templateVars = {'user_id': req.session.user_id, 'user' : user};
