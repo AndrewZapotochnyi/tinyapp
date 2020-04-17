@@ -6,11 +6,31 @@
   <title>URL - TinyApp Example</title>
 </head>
 <body>
-  <%- include('partials/_header') %>
+
+<header>
+  <nav class="navbar navbar-expand-md navbar-dark bg-success">
+    <a class="navbar-brand" href="/urls">TinyApp</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        
+
+          <form class="form-inline" name="username" action='/login' method="GET">
+          <button type="submit" class="btn"> Login </button></form>
+          <form class="form-inline" name="username" action='/register' method="GET">
+            <button type="submit" class="btn"> Register </button></form>
+      
+      </div>
+    </div>
+  </nav>
+</header>
+
   <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">You don't have a permission to access this page or page doesn't exist in this Universe</h5>
+        <h5 class="card-title">Please, log in to access this page</h5>
       </div>
       
       

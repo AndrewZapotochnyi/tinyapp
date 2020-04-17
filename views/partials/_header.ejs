@@ -6,11 +6,13 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        
         
         
         <% if(user){ %>
+          <a class="nav-item nav-link" href="/urls">My URLs</a>
+          <form class="form-inline" name="newurl" action='/urls/new' method="GET">
+            <button type="submit" class="btn"> Create a New Short Link </button></form>
           <form class="form-inline" name="username" action='/logout' method="POST">
             <p class="nav-item">Logged in as: <%= user.email %></a>
             <button type="submit" class="btn"> Logout </button></form>

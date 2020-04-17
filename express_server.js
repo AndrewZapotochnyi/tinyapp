@@ -86,8 +86,10 @@ app.post("/register", (req, res) => {
   
   // Check, whether we already have such user and if email/password are not blank
   if (email === "" || password === "") {
+    res.render("reg_empty");
     res.status(400).end()
   }  else if (emailChecker(email, users) ){
+    
     res.status(400).end()
   } else {
     users[id] = {email, password: hashedPassword, id};
@@ -106,6 +108,7 @@ app.post("/login", (req, res) => {
   let password = req.body["password"];
 
   if (email === "" || password === "") {
+    res.render("wrong_login");
     res.status(403).end()
   }  else if (emailChecker(email, users) ){
       if (passChecker(email, password, users)) {
@@ -113,10 +116,13 @@ app.post("/login", (req, res) => {
         let user = getUserByEmail(email, users);
         req.session.user_id = user.id;
       } else {
+        res.render("wrong_login");
         res.status(403).end()
+        
         return;
       }
   } else {
+    res.render("wrong_login");
     res.status(403).end()
     return;
   }
@@ -133,8 +139,11 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
-// POST to login
+// Get login
 app.get("/login", (req, res) => {
+  
+
+
   let user = users[req.session.user_id];
   let templateVars = {'user_id': req.session.user_id, 'user' : user};
   res.render("login", templateVars);
@@ -155,7 +164,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -189,6 +198,11 @@ app.get("/register", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   let user = users[req.session.user_id];
 
+  if (!user) {
+    res.render("not_loggedin");
+    return;
+  }
+
   let filteredDatabase = urlsForUser(user.id, urlDatabase);
 
   if (filteredDatabase[req.params.shortURL]) {
@@ -207,7 +221,7 @@ app.get("/urls", (req, res) => {
   //let currentEmail = currentUser.email;
 
   if (!user) {
-    res.redirect("/login");
+    res.render("not_loggedin");
     return;
   }
   
@@ -223,6 +237,8 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
+
+
   let user = users[req.session.user_id];
   let templateVars = {'user_id': req.session.user_id, shortURL: req.params.shortURL, longURL: urlDatabase, 'user' : user  };
   let shortUrl = templateVars["shortURL"];
